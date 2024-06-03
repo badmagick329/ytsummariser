@@ -2,7 +2,6 @@ import sys
 from pathlib import Path
 
 import ollama
-
 from vector_db import VectorDB
 
 BASE_DIR = Path(__file__).parent

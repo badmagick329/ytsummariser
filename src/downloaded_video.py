@@ -1,7 +1,6 @@
 import subprocess
 from enum import Enum
 from pathlib import Path
-from typing import Literal
 
 
 class DownloadStatus(Enum):
