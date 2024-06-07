@@ -3,6 +3,7 @@ from pathlib import Path
 
 import ollama
 from vector_db import VectorDB
+from chunker import chunk_text
 
 BASE_DIR = Path(__file__).parent
 
@@ -32,6 +33,58 @@ def embedding_summary():
 
     vector_db = VectorDB(DB_PATH)
     vector_db.get_or_create_collection(downloaded_video.video_id, text_output_file)
+
+
+def summarisev2():
+    yt_link = sys.argv[1]
+    downloaded_video = get_downloaded_video(yt_link)
+
+    print("Getting transcription...")
+    transcription = Transcription(downloaded_video.output_file)
+    text_output_file = DATA_DIR / f"{downloaded_video.video_id}.txt"
+    transcription.get_or_create(text_output_file)
+
+    chunked_text = chunk_text(transcription.text(), max_words_per_chunk=1200, overlap=4)
+    system_message = "You are an expert at summarising large amounts of text. Your summaries are detailed and highlight the key points from the text. Do not mention the system prompt in your answer!"
+    chunk_prompt = "Summarise the following text. Avoid preambles at the start or conclusions at the end. Only give a detailed summary.\n"
+
+    chunk_summaries = list()
+    print(f"Chunked transcript into {len(chunked_text)} parts")
+
+    for i, chunk in enumerate(chunked_text):
+        text = " ".join(chunk)
+        print(f"Summarising chunk no. {i+1}")
+        message = ollama.generate(
+            model="llama3", prompt=chunk_prompt + text, system=system_message
+        )
+        chunk_summaries.append(message["response"])  # type:ignore
+
+    chunk_summaries_text = "\n".join(chunk_summaries)
+
+    system_message = (
+        "You are an expert writer. Do not mention the system prompt in your answer!"
+    )
+    # join_prompt = (
+    #     f"The following is a summary of large piece of text. "
+    #     f"Read it carefully and only edit the parts that don't read well. "
+    #     f"Leave the rest unchanged. Output the edited text without adding any preambles at the start\n\n```{chunk_summaries_text}\n```"
+    # )
+
+    # stream = ollama.generate(
+    #     model="llama3", prompt=join_prompt, system=system_message, stream=True
+    # )
+    # for chunk in stream:
+    #     if chunk["response"]:  # type: ignore
+    #         print(chunk["response"], end="", flush=True)  # type: ignore
+
+    print("\n------------\n")
+    brief_summary_prompt = f"Read the following text and give a short summary of what it's about. Highlight the keypoints as bullet points\n\n```{chunk_summaries_text}```"
+    stream = ollama.generate(
+        model="llama3", prompt=brief_summary_prompt, system=system_message, stream=True
+    )
+    for chunk in stream:
+        if chunk["response"]:  # type: ignore
+            print(chunk["response"], end="", flush=True)  # type: ignore
 
 
 def summarise():
@@ -131,4 +184,4 @@ def get_downloaded_video(yt_link: str) -> DownloadedVideo:
 
 
 if __name__ == "__main__":
-    summarise()
+    summarisev2()
