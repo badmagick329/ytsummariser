@@ -3,7 +3,7 @@ from pathlib import Path
 import whisper
 
 
-class Transcription:
+class Transcript:
     _text: str | None = None
     _target_file: Path
     _model: whisper.Whisper
@@ -23,11 +23,14 @@ class Transcription:
         self._text = self._result["text"]
         return self._text
 
-    def get_or_create(self, output_file: Path):
-        if output_file.exists():
-            with open(output_file, "r", encoding="utf-8") as f:
-                self._text = f.read()
+    def load_saved_transcript(self, output_file: Path) -> bool:
+        if not output_file.exists():
+            return False
+
+        with open(output_file, "r", encoding="utf-8") as f:
+            self._text = f.read()
+        return True
+
+    def generate_new_transcript(self, output_file: Path):
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(self.text())
-
-        return self.text()

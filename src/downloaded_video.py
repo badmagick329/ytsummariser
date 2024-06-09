@@ -11,7 +11,7 @@ class DownloadStatus(Enum):
 
 
 class DownloadedVideo:
-    _output_file: str
+    _output_file: Path
     _video_id: str
     _yt_link: str | None = None
 
@@ -22,10 +22,9 @@ class DownloadedVideo:
             self._video_id = yt_link.split("&")[0].split("?v=")[-1]
         elif "youtu.be/" in yt_link:
             self._video_id = yt_link.split("?")[0].split("youtu.be/")[-1]
-        self._output_file = str(self._target_dir / f"{self._video_id}.mp3")
 
     def is_downloaded(self):
-        return Path(self._output_file).is_file()
+        return Path(self.mp3_output).is_file()
 
     def download(self) -> DownloadStatus:
         if self.is_downloaded():
@@ -37,11 +36,17 @@ class DownloadedVideo:
         )
 
     def create_cmd(self) -> str:
-        return f"yt-dlp -q -x --audio-format mp3 {self._yt_link} -o {self._output_file}"
+        return (
+            f"yt-dlp -q -x --audio-format mp3 {self._yt_link} -o {str(self.mp3_output)}"
+        )
 
     @property
-    def output_file(self) -> Path:
-        return Path(self._output_file)
+    def mp3_output(self) -> Path:
+        return self._target_dir / f"{self._video_id}.mp3"
+
+    @property
+    def txt_output(self) -> Path:
+        return self._target_dir / f"{self._video_id}.txt"
 
     @property
     def video_id(self) -> str:

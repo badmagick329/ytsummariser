@@ -42,7 +42,6 @@ class VectorDB:
         print(f"with {len(chunks)} chunks")
         for index, chunk in enumerate(chunks):
             embed = ollama.embeddings(model=self._embed_mode, prompt=chunk)["embedding"]
-            print(".", end="", flush=True)
             self.collection.upsert(
                 [str(filename) + str(index)],
                 [embed],
@@ -50,7 +49,7 @@ class VectorDB:
                 metadatas={"source": str(filename)},
             )
 
-        print("--- %s seconds ---" % (time.time() - start_time))
+        print("Time taken: %s seconds" % (time.time() - start_time))
 
     @staticmethod
     def _chunk_text_by_sentences(
