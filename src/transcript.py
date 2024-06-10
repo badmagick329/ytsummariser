@@ -9,7 +9,7 @@ class Transcript:
     _model: whisper.Whisper
     _result: dict[str, str | list]
 
-    def __init__(self, target_file: Path, model_name: str = "base") -> None:
+    def __init__(self, target_file: Path, model_name: str = "base.en") -> None:
         self._model = whisper.load_model(model_name)
         self._target_file = target_file
 
