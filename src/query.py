@@ -18,7 +18,7 @@ from transcript import Transcript
 
 def query_main():
     if len(sys.argv) < 2:
-        print("Usage: python transcribe.py <youtube_link>")
+        print("Usage: python query.py <youtube_link>")
         sys.exit(1)
 
     query = input("Enter your query: ").strip()

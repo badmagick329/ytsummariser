@@ -1,7 +1,124 @@
 from nltk.tokenize import sent_tokenize, word_tokenize
+from typing import Protocol
 
 # import nltk
+
 # nltk.download("punkt")
+
+
+class IChunkedText(Protocol):
+    """
+    The source text is chunked into a list of sentences. These chunks are
+    broken up into a list of chunks based on the maximum context length for
+    a specific model
+    """
+
+    @property
+    def source_text(self) -> str:
+        """
+        Returns:
+            str: The source text for the chunks
+        """
+        ...
+
+    def chunks(self) -> list[list[str]]:
+        """
+        Returns:
+            list[list[str]]: A list of chunks. The chunks are a list of sentences
+        """
+        ...
+
+
+class OllamaChunkedTextError(Exception):
+    pass
+
+
+class OllamaChunkedText:
+    _source_text: str
+    _max_words_per_chunk: int
+    _overlap: int
+    _language: str
+    _min_max_words_per_chunk: int = 20
+    _chunks: list[list[str]] | None
+
+    def __init__(
+        self,
+        source_text: str,
+        max_words_per_chunk: int = 3000,
+        min_max_words_per_chunk: int = 20,
+        overlap: int = 0,
+        language: str = "english",
+    ):
+        """
+
+        Args:
+            source_text (str): Source Text
+
+            max_words_per_chunk (int, optional): A loose upper limit on the
+            number of words per chunk. Once this limit is reached, more
+            sentences won't be added to the chunk. Defaults to 3000.
+
+            overlap (int, optional): Number of overlapping sentences in chunks.
+            Defaults to 0.
+
+            language (str, optional): Defaults to "english".
+        """
+        if max_words_per_chunk < min_max_words_per_chunk:
+            raise OllamaChunkedTextError(
+                f"max_words_per_chunk must be at least {min_max_words_per_chunk} words long."
+            )
+        self._source_text = source_text
+        self._max_words_per_chunk = max_words_per_chunk
+        self._overlap = overlap
+        self._language = language
+        self._chunks = None
+
+    @property
+    def source_text(self) -> str:
+        return self._source_text
+
+    def chunks(self) -> list[list[str]]:
+        if self._chunks is not None:
+            return self._chunks
+
+        self._create_chunks()
+        assert self._chunks is not None
+        return self._chunks
+
+    def _create_chunks(self):
+        sentences = sent_tokenize(self.source_text, language=self._language)
+        if not sentences:
+            self._chunks = list()
+
+        chunks = []
+        chunk = []
+        i = 0
+        while i < len(sentences):
+            sent = sentences[i]
+            words_in_sent = word_tokenize(sent)
+            if len(words_in_sent) > self._max_words_per_chunk:
+                raise OllamaChunkedTextError(
+                    f"max_words_per_chunk is too small for the sentence: {sent}"
+                )
+
+            word_tokens_so_far = word_tokenize(" ".join(chunk))
+            if len(word_tokens_so_far) > self._max_words_per_chunk:
+                chunks.append(chunk)
+                chunk = []
+                if self._overlap > 0 and chunks:
+                    last_chunk = chunks[-1]
+                    chunk = [last_chunk[-(self._overlap)]]
+
+            if chunk:
+                chunk.append(sent)
+            else:
+                chunk = [sent]
+
+            i += 1
+        if chunk:
+            chunks.append(chunk)
+
+        self._chunks = chunks
 
 
 def chunk_text(
