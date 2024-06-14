@@ -52,7 +52,7 @@ def query_main():
             print("No relevant docs for this query")
             sys.exit(1)
 
-        model_query = f"{query} - Answer that question using the following text as a resource: {relevant_docs}"
+        model_query = f"{query} - Answer that question using the following text as a resource. No preambles\n\n{relevant_docs}"
         stream = ollama.generate(model="llama3", prompt=model_query, stream=True)
         for chunk in stream:
             if chunk["response"]:  # type: ignore

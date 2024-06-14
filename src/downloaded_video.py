@@ -1,7 +1,6 @@
 import subprocess
 from enum import Enum
 from pathlib import Path
-from chunker import chunk_text
 
 
 class DownloadStatus(Enum):
