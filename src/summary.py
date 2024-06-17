@@ -74,12 +74,12 @@ class Summary:
         return (
             "Summarise the following text. "
             "Avoid preambles at the start or conclusions at the end. "
-            "Only give a detailed summary.\n"
+            "Only give a detail rich summary.\n"
         )
 
     @property
     def brief_summary_prompt(self) -> str:
         return (
-            "Read the following text and give a short summary of what it's about. "
-            "Highlight the keypoints as bullet points\n\n"
+            "Read the following text and provide a short summary of what it's about. "
+            "In addition to that, highlight the keypoints as bullet points\n\n"
         )

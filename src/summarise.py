@@ -1,8 +1,8 @@
 import sys
 from pathlib import Path
 
-from chunked_text import OllamaChunkedText
-from genai import LlamaGen
+from chunked_text import OllamaChunkedText, OpenAIChunkedText
+from models import LlamaGen, OpenAIGen
 from summary import Summary
 
 BASE_DIR = Path(__file__).parent
@@ -26,6 +26,8 @@ def summarise():
 
     chunked_text = OllamaChunkedText(max_words_per_chunk=1200, overlap=4)
     llama_gen = LlamaGen()
+    # chunked_text = OpenAIChunkedText(overlap=4)
+    # llama_gen = OpenAIGen()
     summary = Summary(llama_gen, chunked_text, video_text)
     for word in summary.text():
         print(word, end="", flush=True)
