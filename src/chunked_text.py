@@ -19,7 +19,6 @@ class OllamaChunkedText:
     _overlap: int
     _language: str
     _min_max_words_per_chunk: int = 20
-    _chunks: list[list[str]] | None
 
     def __init__(
         self,
@@ -49,12 +48,8 @@ class OllamaChunkedText:
         self._max_words_per_chunk = max_words_per_chunk
         self._overlap = overlap
         self._language = language
-        self._chunks = None
 
     def chunks(self, source_text: str) -> list[list[str]]:
-        if self._chunks is not None:
-            return self._chunks
-
         self._create_chunks(source_text)
         assert self._chunks is not None
         return self._chunks
@@ -98,7 +93,6 @@ class OpenAIChunkedText:
     _model: str
     _overlap: int
     _language: str
-    _chunks: list[list[str]] | None
     _max_context = {
         "gpt-4o": 128_000,
         "gpt-4-turbo": 128_000,
@@ -122,7 +116,6 @@ class OpenAIChunkedText:
         self._model = model
         self._overlap = overlap
         self._language = language
-        self._chunks = None
 
     @property
     def model(self) -> str:
@@ -133,9 +126,6 @@ class OpenAIChunkedText:
         return self._max_context[self.model]
 
     def chunks(self, source_text: str) -> list[list[str]]:
-        if self._chunks is not None:
-            return self._chunks
-
         self._create_chunks(source_text)
         assert self._chunks is not None
         return self._chunks

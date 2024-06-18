@@ -20,28 +20,18 @@ class Summary:
         if self._summary:
             yield self._summary
         else:
-            chunks = self._chunked_text.chunks(self.source_text)
-            if len(chunks) == 1:
-                chunks_summaries = chunks[0]
-            else:
-                chunks_summaries = self._get_chunks_summaries(
-                    self._chunked_text.chunks(self.source_text)
-                )
-                assert chunks_summaries
+            chunks_summaries = self.reduce_text(self.source_text)
+            assert chunks_summaries
 
             result = list()
 
             try:
-                for resp in self._stream_summaries_summary(chunks_summaries):
+                for resp in self._stream_summaries_summary("\n".join(chunks_summaries)):
                     result.append(resp)
                     yield resp
                 self._summary = "".join(result)
             except Exception:
                 self._summary = ""
-
-    @property
-    def source_text(self) -> str:
-        return self._source_text
 
     def _get_chunks_summaries(self, chunks: list[list[str]]) -> list[str]:
         chunk_summaries = list()
@@ -56,14 +46,27 @@ class Summary:
         return chunk_summaries
 
     def _stream_summaries_summary(
-        self, summaries: list[str]
+        self, chunks_summary: str
     ) -> Generator[str, None, None]:
-        chunks_summary = "\n".join(summaries)
         brief_summary_prompt = self.brief_summary_prompt + f"```{chunks_summary}```"
         for chunk in self._genai.generate_stream(
             self.system_message, brief_summary_prompt
         ):
             yield chunk
+
+    def reduce_text(self, text: str) -> list[str]:
+        chunks = self._chunked_text.chunks(text)
+        if len(chunks) == 1:
+            return chunks[0]
+
+        chunks_summaries = self._get_chunks_summaries(chunks)
+        assert chunks_summaries
+        new_text = "\n".join(chunks_summaries)
+        return self.reduce_text(new_text)
+
+    @property
+    def source_text(self) -> str:
+        return self._source_text
 
     @property
     def system_message(self) -> str:
