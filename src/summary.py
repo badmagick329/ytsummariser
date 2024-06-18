@@ -20,10 +20,14 @@ class Summary:
         if self._summary:
             yield self._summary
         else:
-            chunks_summaries = self._get_chunks_summaries(
-                self._chunked_text.chunks(self.source_text)
-            )
-            assert chunks_summaries
+            chunks = self._chunked_text.chunks(self.source_text)
+            if len(chunks) == 1:
+                chunks_summaries = chunks[0]
+            else:
+                chunks_summaries = self._get_chunks_summaries(
+                    self._chunked_text.chunks(self.source_text)
+                )
+                assert chunks_summaries
 
             result = list()
 
